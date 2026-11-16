@@ -1,275 +1,222 @@
-# Enterprise AI Platform
+# Enterprise AI Platform – AWS DevOps Project
 
-An AI-powered application platform built with **Python, FastAPI, Docker, and Microsoft Azure**, with an automated CI/CD workflow using **GitHub and Azure DevOps**.
+An end-to-end DevOps implementation demonstrating containerization, Infrastructure as Code (IaC), CI/CD automation, container image management, and Kubernetes deployment on Amazon Web Services (AWS).
 
-The project demonstrates how to develop, test, containerize, publish, and prepare an application for cloud-native deployment using modern DevOps practices.
-
----
-
-## Table of Contents
-
-- [Project Overview](#project-overview)
-- [Architecture](#architecture)
-- [Technology Stack](#technology-stack)
-- [Project Features](#project-features)
-- [Prerequisites](#prerequisites)
-- [Getting Started](#getting-started)
-- [Run Locally](#run-locally)
-- [Run with Docker](#run-with-docker)
-- [Automated Testing](#automated-testing)
-- [Azure Container Registry](#azure-container-registry)
-- [CI/CD Pipeline](#cicd-pipeline)
-- [Kubernetes and AKS Deployment](#kubernetes-and-aks-deployment)
-- [Environment Variables](#environment-variables)
-- [Troubleshooting](#troubleshooting)
-- [Future Improvements](#future-improvements)
-- [Author](#author)
+The project deploys a FastAPI-based Enterprise AI Platform using Docker, Amazon ECR, Amazon EKS, Terraform, and GitHub Actions.
 
 ---
 
-## Project Overview
+## 1. Project Overview
 
-The Enterprise AI Platform is a containerized application developed using FastAPI and Python.
+This project demonstrates how to automate the complete application delivery lifecycle:
 
-The main objective of this project is to implement a practical DevOps workflow that automates application testing, Docker image creation, and publishing container images to Azure Container Registry.
+1. Develop and test a Python FastAPI application.
+2. Containerize the application using Docker.
+3. Provision AWS infrastructure using Terraform.
+4. Store Docker images in Amazon Elastic Container Registry (ECR).
+5. Automate CI/CD using GitHub Actions.
+6. Authenticate GitHub Actions with AWS using OpenID Connect (OIDC).
+7. Deploy the application to Amazon Elastic Kubernetes Service (EKS).
+8. Verify Kubernetes deployment status and application health.
 
-The project uses a self-hosted Red Hat Enterprise Linux (RHEL 10) agent to execute Azure DevOps pipeline tasks.
+### Project Objectives
 
-The deployment architecture is designed to extend into Kubernetes using Azure Kubernetes Service (AKS).
-
-### Project Goals
-
-- Develop and run a Python FastAPI application.
-- Manage source code using Git and GitHub.
-- Implement automated application testing with Pytest.
-- Containerize the application using Docker.
-- Configure a self-hosted Azure DevOps agent on RHEL 10.
-- Build automated CI/CD pipelines using Azure DevOps.
-- Publish Docker images to Azure Container Registry.
-- Prepare Kubernetes manifests for application deployment.
-- Extend the pipeline to support automated AKS deployments.
-
----
-
-## Architecture
-
-### Current CI/CD Architecture
-
-```text
-                 Developer
-                     |
-                     v
-               GitHub Repository
-                     |
-                     v
-               Azure DevOps
-                     |
-                     v
-          RHEL 10 Self-Hosted Agent
-                     |
-             +-------+-------+
-             |       |       |
-             v       v       v
-          Python  Pytest   Docker
-          Setup   Testing   Build
-                             |
-                             v
-                  Azure Container Registry
-                             |
-                             v
-                   Docker Image Storage
-```
-
-### Planned Kubernetes Architecture
-
-```text
-              GitHub Repository
-                     |
-                     v
-               Azure DevOps
-                     |
-                     v
-             Automated CI/CD
-                     |
-                     v
-          Azure Container Registry
-                     |
-                     v
-             Azure Kubernetes
-                  Service
-                     |
-              +------+------+
-              |             |
-              v             v
-          Kubernetes    Kubernetes
-          Deployment     Service
-              |
-              v
-          Application Pods
-```
+- Implement infrastructure automation using Terraform.
+- Build and manage Docker containers.
+- Deploy containerized applications to Kubernetes.
+- Configure automated CI/CD pipelines.
+- Implement secure AWS authentication using GitHub OIDC.
+- Configure a self-hosted GitHub Actions runner on RHEL.
+- Understand AWS cloud infrastructure and DevOps workflows.
 
 ---
 
-## Technology Stack
+## 2. Technology Stack
 
-| Category | Technology |
+| Category | Technologies |
 |---|---|
+| Operating System | Red Hat Enterprise Linux 10 |
 | Programming Language | Python 3.12 |
 | Backend Framework | FastAPI |
-| API Server | Uvicorn |
-| Testing | Pytest |
 | Containerization | Docker |
-| Operating System | Red Hat Enterprise Linux 10 |
-| Version Control | Git |
-| Source Code Hosting | GitHub |
-| CI/CD | Azure DevOps Pipelines |
-| Build Agent | RHEL 10 Self-Hosted Agent |
-| Container Registry | Azure Container Registry |
-| Container Orchestration | Kubernetes |
-| Cloud Kubernetes Service | Azure Kubernetes Service (planned) |
-| Container CLI | kubectl |
+| Infrastructure as Code | Terraform |
+| Cloud Platform | AWS |
+| Container Registry | Amazon ECR |
+| Kubernetes | Amazon EKS |
+| CI/CD | GitHub Actions |
+| Authentication | AWS IAM, OIDC |
+| Kubernetes Management | kubectl |
+| Version Control | Git and GitHub |
+| Automation Runner | Self-hosted GitHub Actions Runner |
 
 ---
 
-## Project Features
+## 3. AWS Architecture
 
-### 1. FastAPI Application
+```text
+                    Developer
+                        |
+                        v
+                 GitHub Repository
+                        |
+                        v
+                GitHub Actions CI/CD
+                        |
+              +---------+---------+
+              |                   |
+              v                   v
+         Run Pytest          AWS OIDC Login
+              |                   |
+              v                   v
+         Build Docker       Assume IAM Role
+              |                   |
+              +---------+---------+
+                        |
+                        v
+                  Amazon ECR
+                 Docker Images
+                        |
+                        v
+                GitHub Actions
+                Self-hosted Runner
+                        |
+                        v
+                  Amazon EKS
+                 Kubernetes Cluster
+                        |
+                        v
+                  Deployment
+                        |
+                        v
+                  Kubernetes Pod
+                        |
+                        v
+                 FastAPI Application
+                        |
+                        v
+                 Health Verification
+```
 
-- Python-based backend application.
-- REST API development using FastAPI.
-- API documentation through Swagger UI.
-- Application execution using Uvicorn.
+### AWS Infrastructure
 
-### 2. Docker Containerization
+The infrastructure is provisioned using Terraform.
 
-- Dockerfile-based image creation.
-- Application dependencies installed inside the container.
-- Consistent application runtime environment.
-- Container image tagging and publishing.
-
-### 3. Automated Testing
-
-- Pytest-based automated testing.
-- Test execution through Azure DevOps.
-- Pipeline execution stops when a test stage fails.
-
-### 4. CI/CD Automation
-
-- GitHub source code integration.
-- Azure DevOps pipeline configuration.
-- Self-hosted RHEL build agent.
-- Automated Python dependency installation.
-- Automated test execution.
-- Docker image build and push.
-
-### 5. Azure Container Registry
-
-- Centralized Docker image storage.
-- Version-based image tagging.
-- Container image management using Azure CLI.
-
----
-
-## Prerequisites
-
-Install the following tools before running the project.
-
-| Tool | Purpose |
+| Resource | Configuration |
 |---|---|
-| Python 3.12 | Application runtime |
-| Git | Version control |
-| Docker Engine | Containerization |
-| Azure CLI | Azure resource management |
-| kubectl | Kubernetes management |
-| RHEL 10 or compatible Linux | Development environment |
+| AWS Region | ap-southeast-1 |
+| VPC | 10.0.0.0/16 |
+| Public Subnet 1 | 10.0.1.0/24 |
+| Public Subnet 2 | 10.0.2.0/24 |
+| EKS Cluster | enterprise-ai-eks |
+| EKS Node Group | enterprise-ai-eks-nodes |
+| Worker Instance Type | t3.medium |
+| ECR Repository | enterprise-ai-platform |
+
+The infrastructure includes:
+
+- Amazon VPC
+- Internet Gateway
+- Public subnets
+- Route table
+- IAM roles and policies
+- Amazon EKS cluster
+- EKS managed node group
+- Amazon ECR repository
+- GitHub Actions OIDC identity provider and IAM role
 
 ---
 
-## Getting Started
+## 4. Application Structure
 
-### 1. Clone the Repository
+The FastAPI application provides sample API endpoints to demonstrate containerization and deployment.
 
-```bash
-git clone https://github.com/OshanWanasekara/enterprise-ai-platform.git
-```
-
-Navigate into the project:
-
-```bash
-cd enterprise-ai-platform
-```
-
-### 2. Create a Python Virtual Environment
-
-```bash
-python3.12 -m venv venv
-```
-
-Activate the environment:
-
-```bash
-source venv/bin/activate
-```
-
-### 3. Upgrade pip
-
-```bash
-python -m pip install --upgrade pip
-```
-
-### 4. Install Dependencies
-
-```bash
-pip install -r requirements.txt
+```text
+enterprise-ai-platform-aws/
+│
+├── app/
+│   └── main.py
+│
+├── tests/
+│   └── test_api.py
+│
+├── k8s/
+│   ├── deployment.yaml
+│   └── service.yaml
+│
+├── terraform-aws/
+│   ├── main.tf
+│   ├── variables.tf
+│   ├── outputs.tf
+│   ├── providers.tf
+│   └── github-oidc.tf
+│
+├── .github/
+│   └── workflows/
+│       └── aws-cicd.yml
+│
+├── Dockerfile
+├── requirements.txt
+├── .gitignore
+└── README.md
 ```
 
 ---
 
-## Run Locally
+## 5. Application API Endpoints
 
-Start the FastAPI application using Uvicorn.
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/` | Application information |
+| GET | `/health` | Application health status |
+| POST | `/predict` | Sample prediction response |
+| GET | `/docs` | Swagger API documentation |
 
-```bash
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+Example health response:
+
+```json
+{
+  "status": "healthy"
+}
 ```
 
-The application will be available at:
-
-```text
-http://localhost:8000
-```
-
-FastAPI Swagger documentation:
-
-```text
-http://localhost:8000/docs
-```
-
-Alternative API documentation:
-
-```text
-http://localhost:8000/redoc
-```
-
-**Note:** This command assumes your application entry point is `app/main.py` and contains the FastAPI instance named `app`. Adjust it if your actual entry point differs.
+The prediction endpoint currently returns a sample response. It can be extended to integrate an actual machine learning model.
 
 ---
 
-## Run with Docker
+## 6. Docker Containerization
 
-### 1. Build the Docker Image
+The application is containerized using Docker.
+
+### Dockerfile
+
+```dockerfile
+FROM python:3.12-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY app/ ./app/
+
+RUN useradd --create-home --uid 10001 appuser \
+    && chown -R appuser:appuser /app
+
+USER appuser
+
+EXPOSE 8000
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+```
+
+### Build Docker Image
 
 ```bash
 docker build -t enterprise-ai-platform:latest .
 ```
 
-### 2. Verify the Docker Image
-
-```bash
-docker images
-```
-
-### 3. Run the Container
+### Run Docker Container
 
 ```bash
 docker run -d \
@@ -278,31 +225,156 @@ docker run -d \
   enterprise-ai-platform:latest
 ```
 
-### 4. Check Running Containers
+### Test the Application
 
 ```bash
-docker ps
+curl http://localhost:8000/health
 ```
 
-### 5. View Container Logs
+---
+
+## 7. Amazon ECR Configuration
+
+Amazon ECR is used to store and manage Docker images.
+
+### Authenticate Docker with ECR
 
 ```bash
-docker logs ai-platform
+aws ecr get-login-password \
+  --region ap-southeast-1 \
+  --profile enterprise-ai-admin | \
+docker login \
+  --username AWS \
+  --password-stdin 803109508817.dkr.ecr.ap-southeast-1.amazonaws.com
 ```
 
-### 6. Stop the Container
+### Tag Docker Image
 
 ```bash
-docker stop ai-platform
+docker tag enterprise-ai-platform:latest \
+803109508817.dkr.ecr.ap-southeast-1.amazonaws.com/enterprise-ai-platform:v1
 ```
 
-### 7. Remove the Container
+### Push Docker Image
 
 ```bash
-docker rm ai-platform
+docker push \
+803109508817.dkr.ecr.ap-southeast-1.amazonaws.com/enterprise-ai-platform:v1
 ```
 
-Access the API:
+---
+
+## 8. Infrastructure Provisioning with Terraform
+
+Terraform is used to provision and manage AWS infrastructure.
+
+### Configure AWS Authentication
+
+```bash
+aws configure sso --profile enterprise-ai-admin
+```
+
+Authenticate:
+
+```bash
+aws sso login --profile enterprise-ai-admin
+```
+
+Verify the AWS identity:
+
+```bash
+aws sts get-caller-identity \
+  --profile enterprise-ai-admin
+```
+
+### Initialize Terraform
+
+```bash
+cd terraform-aws
+
+terraform init
+```
+
+### Validate Configuration
+
+```bash
+terraform validate
+```
+
+### Review Infrastructure Plan
+
+```bash
+terraform plan
+```
+
+### Provision Infrastructure
+
+```bash
+terraform apply
+```
+
+Review the Terraform plan carefully before approving infrastructure creation.
+
+---
+
+## 9. Amazon EKS and Kubernetes Deployment
+
+Amazon EKS provides the managed Kubernetes control plane.
+
+### Configure kubectl
+
+```bash
+aws eks update-kubeconfig \
+  --region ap-southeast-1 \
+  --name enterprise-ai-eks \
+  --profile enterprise-ai-admin
+```
+
+### Verify Cluster Connection
+
+```bash
+kubectl get nodes -o wide
+```
+
+### Deploy the Application
+
+```bash
+kubectl apply -f k8s/deployment.yaml
+
+kubectl apply -f k8s/service.yaml
+```
+
+### Verify Kubernetes Resources
+
+```bash
+kubectl get deployments
+
+kubectl get pods -o wide
+
+kubectl get services
+```
+
+### Verify Deployment Rollout
+
+```bash
+kubectl rollout status deployment/ai-platform
+```
+
+### Access the Application Locally
+
+```bash
+kubectl port-forward service/ai-platform-service 8000:8000
+```
+
+Test:
+
+```bash
+curl http://localhost:8000/
+
+curl http://localhost:8000/health
+```
+
+Swagger documentation:
 
 ```text
 http://localhost:8000/docs
@@ -310,387 +382,219 @@ http://localhost:8000/docs
 
 ---
 
-## Automated Testing
+## 10. GitHub Actions CI/CD Pipeline
 
-The project uses Pytest for automated testing.
+The project uses GitHub Actions to automate application testing, Docker image building, image publishing, and Kubernetes deployment.
 
-Run all tests:
-
-```bash
-python -m pytest -v
-```
-
-Run tests with detailed output:
-
-```bash
-python -m pytest -v -s
-```
-
-The Azure DevOps pipeline executes the automated tests before building and publishing the Docker image.
-
----
-
-## Azure Container Registry
-
-The project uses Azure Container Registry (ACR) to store Docker images.
-
-### Registry Information
-
-| Configuration | Value |
-|---|---|
-| Registry Name | `enterpriseaiplatform123` |
-| Login Server | `enterpriseaiplatform123.azurecr.io` |
-| Repository | `enterprise-ai-platform` |
-
-### 1. Login to Azure
-
-```bash
-az login
-```
-
-If the browser login is unavailable:
-
-```bash
-az login --use-device-code
-```
-
-### 2. Login to ACR
-
-```bash
-az acr login --name enterpriseaiplatform123
-```
-
-### 3. Tag the Docker Image
-
-```bash
-docker tag enterprise-ai-platform:latest \
-  enterpriseaiplatform123.azurecr.io/enterprise-ai-platform:latest
-```
-
-### 4. Push the Image
-
-```bash
-docker push \
-  enterpriseaiplatform123.azurecr.io/enterprise-ai-platform:latest
-```
-
-### 5. Verify Published Images
-
-```bash
-az acr repository show-tags \
-  --name enterpriseaiplatform123 \
-  --repository enterprise-ai-platform \
-  --output table
-```
-
-Previously verified image tags:
-
-- `17`
-- `latest`
-- `test`
-
----
-
-## CI/CD Pipeline
-
-Azure DevOps is used to automate the application delivery process.
-
-### Pipeline Workflow
-
-1. Developer pushes source code to GitHub.
-2. Azure DevOps detects changes in the `main` branch.
-3. Pipeline runs on the RHEL 10 self-hosted agent.
-4. Python environment is created.
-5. Application dependencies are installed.
-6. Pytest executes automated tests.
-7. Docker builds the application image.
-8. Docker pushes the image to Azure Container Registry.
-
-### Self-Hosted Agent Configuration
-
-| Configuration | Value |
-|---|---|
-| Agent Operating System | RHEL 10 |
-| Agent Pool | `RHEL-Docker-Agents` |
-| Agent Name | `rhel10-docker-agent` |
-| Agent Version | `5.282.0` |
-
-Start the agent manually:
-
-```bash
-cd ~/myagent
-./run.sh
-```
-
-Keep the agent running while pipeline jobs are executing.
-
-### Azure DevOps Pipeline YAML
-
-The following is the pipeline configuration used in this project.
-
-```yaml
-trigger:
-  - main
-
-pool:
-  name: RHEL-Docker-Agents
-
-variables:
-  imageName: enterprise-ai-platform
-
-steps:
-
-  # Step 1: Check build environment
-  - script: |
-      echo "Checking RHEL build environment..."
-      python3.12 --version
-      docker --version
-      docker info
-    displayName: 'Check RHEL and Docker environment'
-
-  # Step 2: Install Python dependencies
-  - script: |
-      echo "Creating Python virtual environment..."
-      python3.12 -m venv .venv
-
-      .venv/bin/python -m pip install --upgrade pip
-      .venv/bin/python -m pip install -r requirements.txt
-      .venv/bin/python -m pip install pytest
-    displayName: 'Install Python dependencies'
-
-  # Step 3: Run automated tests
-  - script: |
-      echo "Running application tests..."
-      .venv/bin/python -m pytest -v
-    displayName: 'Run automated tests'
-
-  # Step 4: Build and push Docker image
-  - task: Docker@2
-    displayName: 'Build and push Docker image to ACR'
-    inputs:
-      command: buildAndPush
-      containerRegistry: 'acr-enterprise-ai-platform'
-      repository: 'enterprise-ai-platform'
-      Dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
-      buildContext: '$(Build.SourcesDirectory)'
-      tags: |
-        $(Build.BuildId)
-        latest
-```
-
-### Required Azure DevOps Service Connection
-
-Create a Docker Registry service connection for your ACR.
-
-Use the following configuration:
-
-| Field | Value |
-|---|---|
-| Connection name | `acr-enterprise-ai-platform` |
-| Registry URL | `https://enterpriseaiplatform123.azurecr.io` |
-| Authentication | Docker Registry credentials |
-
-Do not commit passwords, tokens, or other credentials to the GitHub repository.
-
-For production, use an appropriately scoped identity and secure authentication instead of permanent administrator credentials.
-
----
-
-## Kubernetes and AKS Deployment
-
-The next phase is to deploy the Docker container to Azure Kubernetes Service.
-
-The intended Kubernetes configuration includes:
-
-- Kubernetes Deployment.
-- Kubernetes Service.
-- Container image from Azure Container Registry.
-- Application Pod management.
-- External application access through a LoadBalancer Service.
-
-### Planned Kubernetes Directory
+Workflow file:
 
 ```text
-k8s/
-├── deployment.yaml
-└── service.yaml
+.github/workflows/aws-cicd.yml
 ```
 
-### Planned Deployment Commands
+### CI/CD Pipeline Stages
 
-Connect to the AKS cluster:
+| Stage | Description |
+|---|---|
+| Checkout | Retrieves source code from GitHub |
+| Setup Python | Configures Python 3.12 |
+| Install Dependencies | Installs application requirements |
+| Run Tests | Executes pytest test cases |
+| AWS Authentication | Authenticates through GitHub OIDC |
+| ECR Login | Logs Docker into Amazon ECR |
+| Docker Build | Builds the application image |
+| Docker Push | Publishes the image to Amazon ECR |
+| Update kubeconfig | Connects to Amazon EKS |
+| Deploy Image | Updates the Kubernetes deployment |
+| Rollout Verification | Checks deployment availability |
+| Health Verification | Tests the application health endpoint |
+
+### GitHub Repository Variables
+
+Configure the following repository variables under:
+
+**Settings → Secrets and variables → Actions → Variables**
+
+| Variable | Value |
+|---|---|
+| AWS_REGION | ap-southeast-1 |
+| AWS_ACCOUNT_ID | 803109508817 |
+| ECR_REPOSITORY | enterprise-ai-platform |
+| EKS_CLUSTER_NAME | enterprise-ai-eks |
+| AWS_ROLE_ARN | arn:aws:iam::803109508817:role/enterprise-ai-github-actions-role |
+
+The AWS role is assumed through OIDC. Long-lived AWS access keys are not required by the workflow.
+
+### Workflow Trigger
+
+The pipeline runs when code is pushed to the `main` branch or when manually triggered using `workflow_dispatch`.
+
+---
+
+## 11. GitHub Actions Self-hosted Runner
+
+A self-hosted GitHub Actions runner is configured on the RHEL 10 environment.
+
+### Runner Configuration
+
+| Configuration | Value |
+|---|---|
+| Operating System | RHEL 10 |
+| Architecture | Linux x64 |
+| Runner Name | localhost |
+| Runner Labels | self-hosted, Linux, X64 |
+| Installation Directory | /opt/actions-runner |
+| Execution Mode | systemd service |
+
+The runner is responsible for executing the deployment job that connects to Amazon EKS.
+
+The runner uses a systemd service and has been configured with the appropriate SELinux file context to allow execution on RHEL.
+
+---
+
+## 12. AWS Security Implementation
+
+The project uses several security mechanisms:
+
+- IAM roles and policies for AWS resource access.
+- GitHub Actions OIDC authentication.
+- Restricted IAM permissions for CI/CD operations.
+- EKS access entries for the GitHub Actions IAM role.
+- ECR authentication using AWS authorization tokens.
+- Non-root Docker container execution.
+- Restricted EKS API endpoint access using an authorized public IP CIDR.
+
+**Security note:** Never commit AWS credentials, GitHub runner registration tokens, private keys, or other sensitive information to the repository.
+
+---
+
+## 13. Testing and Verification
+
+The project includes automated API tests using pytest.
+
+### Run Tests Locally
 
 ```bash
-az aks get-credentials \
-  --resource-group rg-enterprise-ai-aks \
-  --name enterprise-ai-aks \
-  --overwrite-existing
+pip install -r requirements.txt
+
+pytest -v
 ```
 
-Apply Kubernetes manifests:
+### Verify Docker Container
 
 ```bash
-kubectl apply -f k8s/deployment.yaml
-kubectl apply -f k8s/service.yaml
+docker ps
+
+docker logs ai-platform
 ```
 
-Verify deployment:
+### Verify Kubernetes Deployment
 
 ```bash
-kubectl get deployments
 kubectl get pods
-kubectl get services
+
+kubectl get deployments
+
+kubectl rollout status deployment/ai-platform
 ```
 
-Check application logs:
+### Verify Application Health
 
 ```bash
-kubectl logs deployment/enterprise-ai-platform
+curl http://localhost:8000/health
 ```
 
-**Deployment status:** AKS deployment is planned. Cluster provisioning is currently pending resolution of the Azure subscription's allowed-region policy. The commands above are intended for use after the cluster is successfully created and configured.
+The GitHub Actions workflow successfully completed both jobs:
+
+1. Test, Build and Push to ECR.
+2. Deploy to Amazon EKS.
+
+The deployment job also completed Kubernetes rollout and application health verification.
 
 ---
 
-## Environment Variables
+## 14. Important Troubleshooting Notes
 
-If the application requires configuration values, define them through environment variables rather than hardcoding secrets.
-
-Example:
-
-```bash
-export APP_ENV=development
-```
-
-For Docker:
-
-```bash
-docker run -d \
-  --name ai-platform \
-  -p 8000:8000 \
-  -e APP_ENV=development \
-  enterprise-ai-platform:latest
-```
-
-Store sensitive configuration in an appropriate secrets manager. Never commit `.env` files containing credentials.
+| Issue | Possible Solution |
+|---|---|
+| ECR authentication failure | Reauthenticate using `aws ecr get-login-password` |
+| Docker image not found | Verify the image tag using `docker images` |
+| Kubernetes authentication failure | Run `aws eks update-kubeconfig` |
+| Pod ImagePullBackOff | Check the ECR image URI and node IAM permissions |
+| GitHub runner unavailable | Check runner status and workflow labels |
+| Runner SELinux permission error | Check SELinux contexts and service logs |
+| EKS endpoint timeout | Check the authorized public IP CIDR and network connectivity |
+| Terraform validation failure | Run `terraform validate` and review configuration errors |
 
 ---
 
-## Troubleshooting
+## 15. Future Improvements
 
-### 1. Docker Container Name Conflict
+The following improvements are planned:
 
-Error:
-
-```text
-The container name "/ai-platform" is already in use.
-```
-
-Solution:
-
-```bash
-docker rm -f ai-platform
-```
-
-Then run the container again.
-
-### 2. Docker Authentication Required
-
-Error:
-
-```text
-authentication required
-```
-
-Solution:
-
-```bash
-az acr login --name enterpriseaiplatform123
-```
-
-Check your Azure DevOps Docker Registry service connection if the error occurs inside the pipeline.
-
-### 3. Python Version Issues
-
-Verify Python:
-
-```bash
-python3.12 --version
-```
-
-Use the correct Python executable when creating the virtual environment:
-
-```bash
-python3.12 -m venv .venv
-```
-
-### 4. Azure Kubernetes Service Region Restriction
-
-Error:
-
-```text
-RequestDisallowedByAzure
-```
-
-Solution:
-
-Check the subscription's allowed locations and select a permitted region that supports AKS deployment.
-
-```bash
-az account list-locations --output table
-```
-
-Remember that subscription policy restrictions may prevent deployment even when a region is generally available in Azure.
-
-### 5. Docker Daemon Issues
-
-Check Docker:
-
-```bash
-sudo systemctl status docker
-```
-
-Start Docker if necessary:
-
-```bash
-sudo systemctl start docker
-```
+- Prometheus and Grafana monitoring.
+- Centralized application and infrastructure logging.
+- Kubernetes autoscaling.
+- Ingress controller and AWS Load Balancer integration.
+- HTTPS and TLS configuration.
+- Terraform remote state management.
+- Infrastructure security scanning.
+- Docker image vulnerability scanning.
+- Deployment rollback automation.
+- Integration of a real machine learning prediction model.
+- MLOps model training and deployment automation.
 
 ---
 
-## Future Improvements
+## 16. Cost Management and Infrastructure Cleanup
 
-- Complete AKS cluster provisioning.
-- Deploy the application using Kubernetes.
-- Integrate AKS deployment into Azure DevOps.
-- Implement automated rolling updates.
-- Add Kubernetes health probes.
-- Implement monitoring with Prometheus and Grafana.
-- Integrate centralized logging.
-- Implement Infrastructure as Code using Terraform.
-- Improve secret management and container security.
-- Introduce resource limits and autoscaling.
+AWS resources such as EKS clusters, EC2 instances, networking resources, and storage may generate charges while active.
 
----
+Before finishing the project, review the resources and costs in the AWS Console.
 
-## Author
+To remove Terraform-managed infrastructure when it is no longer needed:
 
-**WANASEKARA ARACHCHILLAYA OSHAN HAVISHKA WANASEKARA**
+```bash
+cd terraform-aws
 
-Information Technology Graduate
+terraform plan -destroy
 
-GitHub: [OshanWanasekara](https://github.com/OshanWanasekara)
+terraform destroy
+```
 
-Project Repository: [Enterprise AI Platform](https://github.com/OshanWanasekara/enterprise-ai-platform)
+**Important:** Review the destruction plan carefully. This removes Terraform-managed resources and can make the application unavailable. Ensure that no resources you want to keep depend on this infrastructure.
 
 ---
 
-## License
+## 17. Skills Demonstrated
 
-This project is developed for educational and practical DevOps engineering purposes.
+Through this project, the following practical DevOps skills were implemented:
 
-Add a LICENSE file to the repository if you intend to distribute the project under a specific open-source license.
+- Linux administration using RHEL.
+- Docker image creation and container management.
+- Terraform infrastructure provisioning.
+- AWS IAM and security configuration.
+- Amazon VPC and networking.
+- Amazon ECR image management.
+- Amazon EKS and Kubernetes deployment.
+- GitHub Actions CI/CD automation.
+- OIDC-based cloud authentication.
+- Self-hosted runner configuration.
+- Application testing and deployment verification.
+- Infrastructure troubleshooting.
 
 ---
 
-**Enterprise AI Platform — Building, Testing, Containerizing and Automating Cloud Application Delivery.**
+## 18. Project Repository
+
+**GitHub:** https://github.com/OshanWanasekara/enterprise-ai-platform-aws
+
+**Cloud Provider:** Amazon Web Services (AWS)
+
+**Region:** Asia Pacific (Singapore) – ap-southeast-1
+
+**Status:** AWS CI/CD pipeline and Kubernetes deployment successfully verified.
+
+---
+
+*This project was developed as a practical DevOps learning and implementation project to demonstrate automated application delivery and cloud infrastructure management using AWS.*
