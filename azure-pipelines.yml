@@ -1,0 +1,54 @@
+
+trigger:
+  - main
+
+pool:
+  name: RHEL-Docker-Agents
+
+variables:
+  imageName: enterprise-ai-platform
+
+steps:
+
+  # Step 1: Check build environment
+  - script: |
+      echo "Checking RHEL build environment..."
+      python3.12 --version
+      docker --version
+      docker info
+    displayName: 'Check RHEL and Docker environment'
+
+  # Step 2: Install Python dependencies
+  - script: |
+      echo "Creating Python virtual environment..."
+      python3.12 -m venv .venv
+
+      echo "Upgrading pip..."
+      .venv/bin/python -m pip install --upgrade pip
+
+      echo "Installing project dependencies..."
+      .venv/bin/python -m pip install -r requirements.txt
+
+      echo "Installing pytest..."
+      .venv/bin/python -m pip install pytest
+    displayName: 'Install Python dependencies'
+
+  # Step 3: Run automated tests
+  - script: |
+      echo "Running application tests..."
+      .venv/bin/python -m pytest -v
+    displayName: 'Run automated tests'
+
+  # Step 4: Build and push Docker image to ACR
+  - task: Docker@2
+    displayName: 'Build and push Docker image to ACR'
+    inputs:
+      command: buildAndPush
+      containerRegistry: 'acr-enterprise-ai-platform'
+      repository: 'enterprise-ai-platform'
+      Dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
+      buildContext: '$(Build.SourcesDirectory)'
+      tags: |
+        $(Build.BuildId)
+        latest
+

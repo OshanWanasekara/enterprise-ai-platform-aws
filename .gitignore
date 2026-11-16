@@ -1,0 +1,25 @@
+# Minikube binary
+minikube-linux-amd64
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+
+# AWS credentials
+.aws/
+*.pem
+
+# Environment variables
+.env
+.env.*
+
+# Python
+venv/
+__pycache__/
+*.pyc
+
+# IDE
+.vscode/
+.idea/

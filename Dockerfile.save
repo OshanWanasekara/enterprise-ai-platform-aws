@@ -1,0 +1,249 @@
+
+
+Add the following:
+# 1. Base image
+FROM python:3.12-slim
+
+# 2. Set working directory
+WORKDIR /app
+
+# 3. Install dependencies
+COPY requirements.txt .
+
+RUN pip install --no-cache-dir -r requirements.txt
+
+# 4. Copy application source code
+COPY app/ ./app/
+
+# 5. Create non-root application user
+RUN useradd --create-home --uid 10001 appuser \
+    && chown -R appuser:appuser /app
+
+# 6. Run application as non-root
+USER appuser
+
+# 7. Application port
+EXPOSE 8000
+
+# 8. Start FastAPI
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+
+Save using Ctrl + O, Enter, and Ctrl + X.
+Understand each Dockerfile instruction
+Instruction	Purpose
+FROM	Selects the base image
+WORKDIR	Sets application working directory
+COPY	Copies files into the image
+RUN	Executes commands during image building
+USER	Specifies the runtime user
+EXPOSE	Documents the application port
+CMD	Defines the container startup command
+
+Important: Why do we use 0.0.0.0 instead of 127.0.0.1?
+
+Because the application must listen on the container's network interface so that requests forwarded from outside the container can reach it.
+6. Step 4 – Create .dockerignore
+We should not copy unnecessary files into the Docker image.
+
+Create:
+nano .dockerignore
+
+
+Add:
+venv/
+__pycache__/
+.pytest_cache/
+.git/
+.env
+*.pyc
+tests/
+
+
+Why?
+
+Imagine your local virtual environment contains 500 MB of dependencies.
+We don't need to copy that environment into the Docker image because our Dockerfile installs dependencies independently.
+
+This reduces unnecessary image contents.
+7. Step 5 – Build the Docker image
+Now we are ready to build.
+
+Run:
+podman build -t enterprise-ai-platform:v1 .
+
+
+Understand the command:
+- podman build = Build an image.
+- -t = Assign a name and tag.
+- enterprise-ai-platform = Image name.
+- v1 = Image version.
+- . = Current directory is the build context.
+
+
+
+
+
+
+
+
+petri.com
+
+
+Check the image:
+podman images
+
+
+You should see something similar to:
+REPOSITORY               TAG     IMAGE ID
+localhost/enterprise-ai-platform  v1   abc123
+
+
+Your image is now created. 8. Step 6 – Run the container Now let's run 
+our application inside the container. podman run -d \
+  --name ai-platform \
+  -p 8000:8000 \
+  enterprise-ai-platform:v1
+
+
+Understand:
+Option	Meaning
+-d	Run in background
+--name	Assign container name
+-p 8000:8000	Map host port to container port
+Image name	Image used to create container
+
+The port mapping means:
+Your RHEL machine
+       |
+       | localhost:8000
+       |
+       v
+Container port 8000
+       |
+       v
+FastAPI application
+
+
+9. Step 7 – Test your containerized application
+Check running containers:
+podman ps
+
+
+Check logs:
+podman logs ai-platform
+
+
+Test the API:
+curl http://localhost:8000/
+
+
+Test health:
+curl http://localhost:8000/health
+
+
+Open the API documentation:
+http://localhost:8000/docs
+
+
+Milestone 1 completed
+Your application is now running inside a container rather than directly inside your RHEL Python environment.
+10. Step 8 – Learn container management
+These commands are important for a DevOps Engineer.
+Command	Purpose
+podman ps	Show running containers
+podman ps -a	Show all containers
+podman images	Show images
+podman logs ai-platform	View application logs
+podman inspect ai-platform	Inspect container configuration
+podman stop ai-platform	Stop container
+podman start ai-platform	Start stopped container
+podman restart ai-platform	Restart container
+podman rm ai-platform	Remove stopped container
+podman rmi IMAGE	Remove image
+
+Try these commands yourself. 11. Step 9 – Understand environment 
+variables Production applications shouldn't hardcode configuration 
+values.
+For example, imagine your application needs:
+DATABASE_URL
+API_KEY
+ENVIRONMENT
+
+
+We can pass environment variables when starting a container:
+podman run -d \
+  --name ai-platform \
+  -p 8000:8000 \
+  -e ENVIRONMENT=production \
+  enterprise-ai-platform:v1
+
+
+Check:
+podman exec ai-platform printenv ENVIRONMENT
+
+
+Security note
+Do not pass real production passwords or API keys directly in shell commands or commit them to Git. Later, we'll implement secure secrets management using Azure Key Vault.
+12. Step 10 – Understand Docker Compose
+Imagine your application has three components:
+Frontend
+Backend
+Database
+
+
+Running each container separately becomes difficult.
+
+Docker Compose allows you to define multiple containers in one YAML file.
+
+Create:
+nano compose.yaml
+
+
+Add:
+services:
+  ai-api:
+    build:
+      context: .
+    container_name: ai-platform
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+
+On RHEL, you can use Podman Compose as a compatible Compose implementation. If installed, run:
+podman-compose up -d --build
+
+
+For now, our project has only one service, so Compose is mainly an introduction. We will expand multi-service deployment later if needed.
+
+13. What have we achieved today?
+Day 02 completion checklist
+Your progress
+0/10
+
+
+
+[ ] Installed Podman on RHEL
+[ ] Understood Docker architecture
+[ ] Created Dockerfile
+[ ] Created .dockerignore
+[ ] Built enterprise-ai-platform image
+[ ] Ran FastAPI inside a container
+[ ] Tested containerized API
+[ ] Practised container logs and management
+[ ] Learned environment variable configuration
+[ ] Created Compose configuration
+
+14. Interview questions from today's implementation
+You should be able to answer these:
+1. Why do we need Docker?
+2. What is the difference between a Docker image and a container?
+3. What is a Dockerfile?
+4. What happens when you execute docker build?
+5. What is the purpose of port mapping?
+6. Why do we use .dockerignore?
+7. What is the difference between RUN and CMD?
+8. Why should containers run as non-root users?
+9. What is Docker Compose?
+10. What is a container registry?

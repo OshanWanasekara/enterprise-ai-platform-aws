@@ -1,0 +1,4 @@
+Application: Enterprise AI Platform
+Environment: Development
+Platform: Docker and Kubernetes
+Application Port: 8000
