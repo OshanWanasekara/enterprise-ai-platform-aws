@@ -62,7 +62,7 @@ jobs:
   deploy-to-eks:
     name: Deploy to Amazon EKS
     needs: test-and-build
-    runs-on: [self-hosted, Linux, X64, rhel-eks-deployer]
+    runs-on: [self-hosted, Linux, X64]
 
     steps:
       - name: Configure AWS credentials
