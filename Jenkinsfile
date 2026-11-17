@@ -73,6 +73,48 @@ pipeline {
                 }
             }
         }
+       
+stage('Verify EKS Access') {
+    steps {
+        withCredentials([[
+            $class: 'AmazonWebServicesCredentialsBinding',
+            credentialsId: 'aws-jenkins-ecr'
+        ]]) {
+            sh '''
+                set -e
+
+                export AWS_DEFAULT_REGION=ap-southeast-1
+                export AWS_REGION=ap-southeast-1
+                export KUBECONFIG="$WORKSPACE/.kube/config"
+
+                mkdir -p "$WORKSPACE/.kube"
+
+                echo "===== Verify Jenkins AWS Identity ====="
+                aws sts get-caller-identity
+
+                echo "===== Connect to Amazon EKS ====="
+                aws eks update-kubeconfig \
+                  --region "$AWS_REGION" \
+                  --name enterprise-ai-eks
+
+                echo "===== Check Kubernetes Permissions ====="
+
+                kubectl auth can-i get deployments -n default
+                kubectl auth can-i patch deployments -n default
+                kubectl auth can-i create services -n default
+                kubectl auth can-i get pods -n default
+
+                echo "===== Inspect Existing Application ====="
+                kubectl get deployments -n default
+                kubectl get pods -n default
+                kubectl get services -n default
+
+                echo "EKS access verification completed."
+            '''
+        }
+    }
+}
+ 
     }
 
     post {
