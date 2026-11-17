@@ -113,6 +113,73 @@ stage('Verify EKS Access') {
             '''
         }
     }
+
+
+stage('Deploy to Amazon EKS') {
+    steps {
+        withCredentials([[
+            $class: 'AmazonWebServicesCredentialsBinding',
+            credentialsId: 'aws-jenkins-ecr'
+        ]]) {
+            sh '''
+                set -e
+
+                export AWS_DEFAULT_REGION=ap-southeast-1
+                export AWS_REGION=ap-southeast-1
+                export KUBECONFIG="$WORKSPACE/.kube/config"
+
+                ECR_IMAGE="803109508817.dkr.ecr.ap-southeast-1.amazonaws.com/enterprise-ai-platform:${BUILD_NUMBER}"
+
+                echo "===== Connect to Amazon EKS ====="
+
+                mkdir -p "$WORKSPACE/.kube"
+
+                aws eks update-kubeconfig \
+                  --region "$AWS_REGION" \
+                  --name enterprise-ai-eks
+
+                echo "===== Apply Kubernetes Deployment ====="
+
+                kubectl apply -f k8s/deployment.yaml
+
+                echo "===== Apply Kubernetes Service ====="
+
+                kubectl apply -f k8s/service.yaml
+
+                echo "===== Update Application Image ====="
+
+                kubectl set image deployment/ai-platform \
+                  ai-api="$ECR_IMAGE" \
+                  -n default
+
+                echo "===== Wait for Deployment Rollout ====="
+
+                kubectl rollout status deployment/ai-platform \
+                  -n default \
+                  --timeout=300s
+
+                echo "===== Verify Application Pods ====="
+
+                kubectl get pods -n default -o wide
+
+                echo "===== Verify Kubernetes Service ====="
+
+                kubectl get service ai-platform-service -n default
+
+                echo "===== Verify Deployment Image ====="
+
+                kubectl get deployment ai-platform \
+                  -n default \
+                  -o jsonpath='{.spec.template.spec.containers[?(@.name=="ai-api")].image}'
+
+                echo
+
+                echo "SUCCESS: Application deployed to Amazon EKS."
+            '''
+        }
+    }
+}
+
 }
  
     }
