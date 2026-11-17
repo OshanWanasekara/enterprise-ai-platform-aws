@@ -17,6 +17,7 @@ pipeline {
 
     stages {
 
+        // 1. Checkout source code
         stage('Checkout') {
             steps {
                 checkout scm
@@ -24,20 +25,27 @@ pipeline {
             }
         }
 
+        // 2. Install dependencies and run tests
         stage('Install Dependencies and Test') {
             steps {
                 sh '''
+                    set -e
+
                     python3 -m venv .venv
                     .venv/bin/python -m pip install --upgrade pip
                     .venv/bin/pip install -r requirements.txt pytest
+
                     .venv/bin/pytest -v
                 '''
             }
         }
 
+        // 3. Build Docker image
         stage('Build Docker Image') {
             steps {
                 sh '''
+                    set -e
+
                     docker build \
                       -t "$IMAGE_URI:$BUILD_NUMBER" \
                       -t "$IMAGE_URI:latest" .
@@ -45,6 +53,7 @@ pipeline {
             }
         }
 
+        // 4. Push Docker image to Amazon ECR
         stage('Push Image to Amazon ECR') {
             steps {
                 withCredentials([[
@@ -54,147 +63,160 @@ pipeline {
                     sh '''
                         set -e
 
-                        echo "Checking AWS identity..."
+                        echo "===== Checking AWS Identity ====="
                         aws sts get-caller-identity
 
-                        echo "Logging in to Amazon ECR..."
+                        echo "===== Logging in to Amazon ECR ====="
+
                         aws ecr get-login-password \
                           --region "$AWS_REGION" |
                           docker login \
                             --username AWS \
                             --password-stdin "$ECR_REGISTRY"
 
-                        echo "Pushing versioned image..."
+                        echo "===== Pushing Versioned Image ====="
                         docker push "$IMAGE_URI:$BUILD_NUMBER"
 
-                        echo "Pushing latest image..."
+                        echo "===== Pushing Latest Image ====="
                         docker push "$IMAGE_URI:latest"
+
+                        echo "Docker image pushed successfully."
                     '''
                 }
             }
         }
-       
-stage('Verify EKS Access') {
-    steps {
-        withCredentials([[
-            $class: 'AmazonWebServicesCredentialsBinding',
-            credentialsId: 'aws-jenkins-ecr'
-        ]]) {
-            sh '''
-                set -e
 
-                export AWS_DEFAULT_REGION=ap-southeast-1
-                export AWS_REGION=ap-southeast-1
-                export KUBECONFIG="$WORKSPACE/.kube/config"
+        // 5. Verify Jenkins access to Amazon EKS
+        stage('Verify EKS Access') {
+            steps {
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    credentialsId: 'aws-jenkins-ecr'
+                ]]) {
+                    sh '''
+                        set -e
 
-                mkdir -p "$WORKSPACE/.kube"
+                        export AWS_DEFAULT_REGION="$AWS_REGION"
+                        export KUBECONFIG="$WORKSPACE/.kube/config"
 
-                echo "===== Verify Jenkins AWS Identity ====="
-                aws sts get-caller-identity
+                        mkdir -p "$WORKSPACE/.kube"
 
-                echo "===== Connect to Amazon EKS ====="
-                aws eks update-kubeconfig \
-                  --region "$AWS_REGION" \
-                  --name enterprise-ai-eks
+                        echo "===== Verify Jenkins AWS Identity ====="
+                        aws sts get-caller-identity
 
-                echo "===== Check Kubernetes Permissions ====="
+                        echo "===== Connect to Amazon EKS ====="
 
-                kubectl auth can-i get deployments -n default
-                kubectl auth can-i patch deployments -n default
-                kubectl auth can-i create services -n default
-                kubectl auth can-i get pods -n default
+                        aws eks update-kubeconfig \
+                          --region "$AWS_REGION" \
+                          --name enterprise-ai-eks
 
-                echo "===== Inspect Existing Application ====="
-                kubectl get deployments -n default
-                kubectl get pods -n default
-                kubectl get services -n default
+                        echo "===== Check Kubernetes Permissions ====="
 
-                echo "EKS access verification completed."
-            '''
+                        kubectl auth can-i get deployments -n default
+                        kubectl auth can-i patch deployments -n default
+                        kubectl auth can-i create services -n default
+                        kubectl auth can-i get pods -n default
+
+                        echo "===== Existing Kubernetes Deployments ====="
+                        kubectl get deployments -n default
+
+                        echo "===== Existing Kubernetes Pods ====="
+                        kubectl get pods -n default
+
+                        echo "===== Existing Kubernetes Services ====="
+                        kubectl get services -n default
+
+                        echo "EKS access verification completed."
+                    '''
+                }
+            }
         }
-    }
 
+        // 6. Deploy application to Amazon EKS
+        stage('Deploy to Amazon EKS') {
+            steps {
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    credentialsId: 'aws-jenkins-ecr'
+                ]]) {
+                    sh '''
+                        set -e
 
-stage('Deploy to Amazon EKS') {
-    steps {
-        withCredentials([[
-            $class: 'AmazonWebServicesCredentialsBinding',
-            credentialsId: 'aws-jenkins-ecr'
-        ]]) {
-            sh '''
-                set -e
+                        export AWS_DEFAULT_REGION="$AWS_REGION"
+                        export KUBECONFIG="$WORKSPACE/.kube/config"
 
-                export AWS_DEFAULT_REGION=ap-southeast-1
-                export AWS_REGION=ap-southeast-1
-                export KUBECONFIG="$WORKSPACE/.kube/config"
+                        ECR_IMAGE="$IMAGE_URI:$BUILD_NUMBER"
 
-                ECR_IMAGE="803109508817.dkr.ecr.ap-southeast-1.amazonaws.com/enterprise-ai-platform:${BUILD_NUMBER}"
+                        echo "===== Connect to Amazon EKS ====="
 
-                echo "===== Connect to Amazon EKS ====="
+                        mkdir -p "$WORKSPACE/.kube"
 
-                mkdir -p "$WORKSPACE/.kube"
+                        aws eks update-kubeconfig \
+                          --region "$AWS_REGION" \
+                          --name enterprise-ai-eks
 
-                aws eks update-kubeconfig \
-                  --region "$AWS_REGION" \
-                  --name enterprise-ai-eks
+                        echo "===== Prepare Deployment Manifest ====="
 
-                echo "===== Apply Kubernetes Deployment ====="
+                        sed -E \
+                          "s|^([[:space:]]*image: ).*$|\\1${ECR_IMAGE}|" \
+                          k8s/deployment.yaml \
+                          > "$WORKSPACE/deployment-rendered.yaml"
 
-                kubectl apply -f k8s/deployment.yaml
+                        echo "===== Apply Kubernetes Deployment ====="
 
-                echo "===== Apply Kubernetes Service ====="
+                        kubectl apply \
+                          -f "$WORKSPACE/deployment-rendered.yaml"
 
-                kubectl apply -f k8s/service.yaml
+                        echo "===== Apply Kubernetes Service ====="
 
-                echo "===== Update Application Image ====="
+                        kubectl apply -f k8s/service.yaml
 
-                kubectl set image deployment/ai-platform \
-                  ai-api="$ECR_IMAGE" \
-                  -n default
+                        echo "===== Wait for Deployment Rollout ====="
 
-                echo "===== Wait for Deployment Rollout ====="
+                        kubectl rollout status deployment/ai-platform \
+                          -n default \
+                          --timeout=300s
 
-                kubectl rollout status deployment/ai-platform \
-                  -n default \
-                  --timeout=300s
+                        echo "===== Verify Deployment ====="
 
-                echo "===== Verify Application Pods ====="
+                        kubectl get deployment ai-platform -n default
 
-                kubectl get pods -n default -o wide
+                        echo "===== Verify Application Pods ====="
 
-                echo "===== Verify Kubernetes Service ====="
+                        kubectl get pods -n default -o wide
 
-                kubectl get service ai-platform-service -n default
+                        echo "===== Verify Kubernetes Service ====="
 
-                echo "===== Verify Deployment Image ====="
+                        kubectl get service ai-platform-service -n default
 
-                kubectl get deployment ai-platform \
-                  -n default \
-                  -o jsonpath='{.spec.template.spec.containers[?(@.name=="ai-api")].image}'
+                        echo "===== Verify Deployed Docker Image ====="
 
-                echo
+                        kubectl get deployment ai-platform \
+                          -n default \
+                          -o jsonpath='{.spec.template.spec.containers[?(@.name=="ai-api")].image}'
 
-                echo "SUCCESS: Application deployed to Amazon EKS."
-            '''
+                        echo
+
+                        echo "SUCCESS: Application deployed to Amazon EKS."
+                    '''
+                }
+            }
         }
-    }
-}
-
-}
- 
     }
 
     post {
         success {
-            echo 'SUCCESS: Tests passed and Docker image pushed to ECR.'
+            echo 'SUCCESS: Jenkins pipeline completed successfully.'
+            echo 'Application tests, Docker build, ECR push and EKS deployment completed.'
         }
 
         failure {
-            echo 'FAILED: Check the Jenkins console output.'
+            echo 'FAILURE: Jenkins pipeline failed. Check the stage logs above.'
         }
 
         always {
-            echo 'Jenkins pipeline execution completed.'
+            echo 'Jenkins pipeline execution finished.'
         }
     }
 }
+
