@@ -1,33 +1,36 @@
 # Enterprise AI Platform – AWS DevOps Project
 
-An end-to-end DevOps implementation demonstrating containerization, Infrastructure as Code (IaC), CI/CD automation, container image management, and Kubernetes deployment on Amazon Web Services (AWS).
+An end-to-end DevOps project demonstrating cloud infrastructure automation, containerization, CI/CD pipeline implementation, container image management, and Kubernetes deployment on Amazon Web Services (AWS).
 
-The project deploys a FastAPI-based Enterprise AI Platform using Docker, Amazon ECR, Amazon EKS, Terraform, and GitHub Actions.
+The project uses a Python FastAPI application and integrates Docker, Amazon ECR, Amazon EKS, Terraform, GitHub Actions, and Jenkins to demonstrate automated application delivery.
 
 ---
 
 ## 1. Project Overview
 
-This project demonstrates how to automate the complete application delivery lifecycle:
+This project demonstrates the complete application delivery lifecycle:
 
 1. Develop and test a Python FastAPI application.
 2. Containerize the application using Docker.
-3. Provision AWS infrastructure using Terraform.
+3. Provision cloud infrastructure using Terraform.
 4. Store Docker images in Amazon Elastic Container Registry (ECR).
 5. Automate CI/CD using GitHub Actions.
-6. Authenticate GitHub Actions with AWS using OpenID Connect (OIDC).
-7. Deploy the application to Amazon Elastic Kubernetes Service (EKS).
-8. Verify Kubernetes deployment status and application health.
+6. Implement a second CI/CD pipeline using Jenkins.
+7. Configure secure AWS authentication for CI/CD pipelines.
+8. Deploy containerized applications to Amazon Elastic Kubernetes Service (EKS).
+9. Verify Kubernetes deployments and application rollout status.
 
 ### Project Objectives
 
-- Implement infrastructure automation using Terraform.
+- Implement Infrastructure as Code (IaC) using Terraform.
 - Build and manage Docker containers.
-- Deploy containerized applications to Kubernetes.
-- Configure automated CI/CD pipelines.
-- Implement secure AWS authentication using GitHub OIDC.
-- Configure a self-hosted GitHub Actions runner on RHEL.
-- Understand AWS cloud infrastructure and DevOps workflows.
+- Automate application testing and delivery.
+- Configure Jenkins and GitHub Actions CI/CD pipelines.
+- Implement AWS IAM-based access control.
+- Configure GitHub Actions authentication using OpenID Connect (OIDC).
+- Integrate Jenkins with Amazon ECR and Amazon EKS.
+- Deploy and manage applications using Kubernetes.
+- Develop practical Linux and cloud infrastructure administration skills.
 
 ---
 
@@ -38,73 +41,122 @@ This project demonstrates how to automate the complete application delivery life
 | Operating System | Red Hat Enterprise Linux 10 |
 | Programming Language | Python 3.12 |
 | Backend Framework | FastAPI |
+| Java Runtime | Amazon Corretto OpenJDK 21 |
 | Containerization | Docker |
+| Cloud Platform | Amazon Web Services (AWS) |
 | Infrastructure as Code | Terraform |
-| Cloud Platform | AWS |
 | Container Registry | Amazon ECR |
-| Kubernetes | Amazon EKS |
-| CI/CD | GitHub Actions |
-| Authentication | AWS IAM, OIDC |
+| Container Orchestration | Kubernetes |
+| Managed Kubernetes | Amazon EKS |
+| CI/CD Automation | Jenkins, GitHub Actions |
+| CI/CD Pipeline Definition | Jenkinsfile, YAML |
+| AWS Authentication | IAM, OIDC, AWS CLI |
 | Kubernetes Management | kubectl |
 | Version Control | Git and GitHub |
-| Automation Runner | Self-hosted GitHub Actions Runner |
+| Automation Runner | GitHub Actions Self-hosted Runner |
+
+### Additional DevOps Tools
+
+- Jenkins Pipeline
+- Docker CLI
+- AWS CLI v2
+- Terraform CLI
+- Kubernetes command-line tools
+- Linux shell scripting
+- pytest
 
 ---
 
-## 3. AWS Architecture
+## 3. System Architecture
+
+The project uses two CI/CD automation workflows to demonstrate different approaches to application delivery.
+
+### GitHub Actions Workflow
 
 ```text
-                    Developer
-                        |
-                        v
-                 GitHub Repository
-                        |
-                        v
-                GitHub Actions CI/CD
-                        |
-              +---------+---------+
-              |                   |
-              v                   v
-         Run Pytest          AWS OIDC Login
-              |                   |
-              v                   v
-         Build Docker       Assume IAM Role
-              |                   |
-              +---------+---------+
-                        |
-                        v
-                  Amazon ECR
-                 Docker Images
-                        |
-                        v
-                GitHub Actions
-                Self-hosted Runner
-                        |
-                        v
-                  Amazon EKS
-                 Kubernetes Cluster
-                        |
-                        v
-                  Deployment
-                        |
-                        v
-                  Kubernetes Pod
-                        |
-                        v
-                 FastAPI Application
-                        |
-                        v
-                 Health Verification
+Developer
+    |
+    v
+GitHub Repository
+    |
+    v
+GitHub Actions
+    |
+    +--------------------+
+    |                    |
+    v                    v
+Python Tests         AWS OIDC Login
+    |                    |
+    v                    v
+Docker Build       Assume IAM Role
+    |                    |
+    +---------+----------+
+              |
+              v
+          Amazon ECR
+              |
+              v
+          Amazon EKS
+              |
+              v
+      Kubernetes Deployment
+              |
+              v
+       FastAPI Application
 ```
 
-### AWS Infrastructure
+### Jenkins Workflow
 
-The infrastructure is provisioned using Terraform.
+```text
+Developer
+    |
+    v
+GitHub Repository
+    |
+    v
+Jenkins Pipeline
+    |
+    v
+Checkout Source Code
+    |
+    v
+Install Dependencies
+    |
+    v
+Run pytest Tests
+    |
+    v
+Build Docker Image
+    |
+    v
+Authenticate with Amazon ECR
+    |
+    v
+Push Docker Image to ECR
+    |
+    v
+Authenticate with Amazon EKS
+    |
+    v
+Apply Kubernetes Manifests
+    |
+    v
+Deploy Application
+    |
+    v
+Verify Deployment Rollout
+```
+
+---
+
+## 4. AWS Infrastructure
+
+AWS infrastructure is provisioned and managed using Terraform.
 
 | Resource | Configuration |
 |---|---|
 | AWS Region | ap-southeast-1 |
-| VPC | 10.0.0.0/16 |
+| VPC CIDR | 10.0.0.0/16 |
 | Public Subnet 1 | 10.0.1.0/24 |
 | Public Subnet 2 | 10.0.2.0/24 |
 | EKS Cluster | enterprise-ai-eks |
@@ -112,23 +164,22 @@ The infrastructure is provisioned using Terraform.
 | Worker Instance Type | t3.medium |
 | ECR Repository | enterprise-ai-platform |
 
-The infrastructure includes:
+### AWS Services
 
 - Amazon VPC
 - Internet Gateway
-- Public subnets
-- Route table
-- IAM roles and policies
-- Amazon EKS cluster
-- EKS managed node group
-- Amazon ECR repository
-- GitHub Actions OIDC identity provider and IAM role
+- Public Subnets
+- Route Tables
+- AWS IAM
+- Amazon Elastic Container Registry (ECR)
+- Amazon Elastic Kubernetes Service (EKS)
+- EKS Managed Node Group
+- IAM Roles and Policies
+- GitHub Actions OIDC Identity Provider
 
 ---
 
-## 4. Application Structure
-
-The FastAPI application provides sample API endpoints to demonstrate containerization and deployment.
+## 5. Project Structure
 
 ```text
 enterprise-ai-platform-aws/
@@ -155,6 +206,7 @@ enterprise-ai-platform-aws/
 │       └── aws-cicd.yml
 │
 ├── Dockerfile
+├── Jenkinsfile
 ├── requirements.txt
 ├── .gitignore
 └── README.md
@@ -162,7 +214,9 @@ enterprise-ai-platform-aws/
 
 ---
 
-## 5. Application API Endpoints
+## 6. Application API
+
+The application is developed using Python and FastAPI.
 
 | Method | Endpoint | Description |
 |---|---|---|
@@ -179,13 +233,13 @@ Example health response:
 }
 ```
 
-The prediction endpoint currently returns a sample response. It can be extended to integrate an actual machine learning model.
+The prediction endpoint currently provides a sample prediction response and can be extended with a machine learning model.
 
 ---
 
-## 6. Docker Containerization
+## 7. Docker Containerization
 
-The application is containerized using Docker.
+Docker is used to package the FastAPI application and its dependencies into a portable container image.
 
 ### Dockerfile
 
@@ -225,7 +279,15 @@ docker run -d \
   enterprise-ai-platform:latest
 ```
 
-### Test the Application
+### Verify Container
+
+```bash
+docker ps
+
+docker logs ai-platform
+```
+
+### Test Application
 
 ```bash
 curl http://localhost:8000/health
@@ -233,11 +295,11 @@ curl http://localhost:8000/health
 
 ---
 
-## 7. Amazon ECR Configuration
+## 8. Amazon ECR – Container Image Management
 
 Amazon ECR is used to store and manage Docker images.
 
-### Authenticate Docker with ECR
+### Authenticate with Amazon ECR
 
 ```bash
 aws ecr get-login-password \
@@ -262,13 +324,21 @@ docker push \
 803109508817.dkr.ecr.ap-southeast-1.amazonaws.com/enterprise-ai-platform:v1
 ```
 
+The Jenkins pipeline also publishes versioned images using Jenkins build numbers, together with a `latest` tag.
+
+Example:
+
+```text
+803109508817.dkr.ecr.ap-southeast-1.amazonaws.com/enterprise-ai-platform:8
+```
+
 ---
 
-## 8. Infrastructure Provisioning with Terraform
+## 9. Infrastructure as Code – Terraform
 
 Terraform is used to provision and manage AWS infrastructure.
 
-### Configure AWS Authentication
+### Configure AWS SSO
 
 ```bash
 aws configure sso --profile enterprise-ai-admin
@@ -280,7 +350,7 @@ Authenticate:
 aws sso login --profile enterprise-ai-admin
 ```
 
-Verify the AWS identity:
+Verify AWS identity:
 
 ```bash
 aws sts get-caller-identity \
@@ -307,19 +377,19 @@ terraform validate
 terraform plan
 ```
 
-### Provision Infrastructure
+### Apply Infrastructure Changes
 
 ```bash
 terraform apply
 ```
 
-Review the Terraform plan carefully before approving infrastructure creation.
+Always review the Terraform execution plan before approving infrastructure changes.
 
 ---
 
-## 9. Amazon EKS and Kubernetes Deployment
+## 10. Amazon EKS – Kubernetes Deployment
 
-Amazon EKS provides the managed Kubernetes control plane.
+Amazon EKS provides the managed Kubernetes control plane for deploying the application.
 
 ### Configure kubectl
 
@@ -336,7 +406,7 @@ aws eks update-kubeconfig \
 kubectl get nodes -o wide
 ```
 
-### Deploy the Application
+### Deploy Kubernetes Resources
 
 ```bash
 kubectl apply -f k8s/deployment.yaml
@@ -344,7 +414,7 @@ kubectl apply -f k8s/deployment.yaml
 kubectl apply -f k8s/service.yaml
 ```
 
-### Verify Kubernetes Resources
+### Verify Deployment
 
 ```bash
 kubectl get deployments
@@ -354,13 +424,13 @@ kubectl get pods -o wide
 kubectl get services
 ```
 
-### Verify Deployment Rollout
+### Verify Rollout
 
 ```bash
 kubectl rollout status deployment/ai-platform
 ```
 
-### Access the Application Locally
+### Access Application Locally
 
 ```bash
 kubectl port-forward service/ai-platform-service 8000:8000
@@ -382,9 +452,9 @@ http://localhost:8000/docs
 
 ---
 
-## 10. GitHub Actions CI/CD Pipeline
+## 11. GitHub Actions CI/CD
 
-The project uses GitHub Actions to automate application testing, Docker image building, image publishing, and Kubernetes deployment.
+GitHub Actions automates application testing, Docker image building, publishing to Amazon ECR, and Kubernetes deployment.
 
 Workflow file:
 
@@ -392,28 +462,30 @@ Workflow file:
 .github/workflows/aws-cicd.yml
 ```
 
-### CI/CD Pipeline Stages
+### Pipeline Stages
 
 | Stage | Description |
 |---|---|
-| Checkout | Retrieves source code from GitHub |
-| Setup Python | Configures Python 3.12 |
-| Install Dependencies | Installs application requirements |
-| Run Tests | Executes pytest test cases |
+| Checkout | Retrieves source code |
+| Setup Python | Configures Python environment |
+| Install Dependencies | Installs application dependencies |
+| Run Tests | Executes pytest |
 | AWS Authentication | Authenticates through GitHub OIDC |
-| ECR Login | Logs Docker into Amazon ECR |
-| Docker Build | Builds the application image |
-| Docker Push | Publishes the image to Amazon ECR |
+| ECR Login | Authenticates Docker with Amazon ECR |
+| Docker Build | Builds application image |
+| Docker Push | Publishes image to ECR |
 | Update kubeconfig | Connects to Amazon EKS |
-| Deploy Image | Updates the Kubernetes deployment |
+| Deploy Image | Updates Kubernetes deployment |
 | Rollout Verification | Checks deployment availability |
 | Health Verification | Tests the application health endpoint |
 
-### GitHub Repository Variables
+### GitHub Actions Authentication
 
-Configure the following repository variables under:
+The workflow uses AWS IAM roles and OpenID Connect (OIDC) for authentication.
 
-**Settings → Secrets and variables → Actions → Variables**
+This avoids storing long-lived AWS access keys in GitHub Actions.
+
+The GitHub repository configuration includes variables such as:
 
 | Variable | Value |
 |---|---|
@@ -421,21 +493,102 @@ Configure the following repository variables under:
 | AWS_ACCOUNT_ID | 803109508817 |
 | ECR_REPOSITORY | enterprise-ai-platform |
 | EKS_CLUSTER_NAME | enterprise-ai-eks |
-| AWS_ROLE_ARN | arn:aws:iam::803109508817:role/enterprise-ai-github-actions-role |
+| AWS_ROLE_ARN | GitHub Actions IAM role ARN |
 
-The AWS role is assumed through OIDC. Long-lived AWS access keys are not required by the workflow.
-
-### Workflow Trigger
-
-The pipeline runs when code is pushed to the `main` branch or when manually triggered using `workflow_dispatch`.
+Workflow triggers include pushes to the `main` branch and manual execution through `workflow_dispatch`.
 
 ---
 
-## 11. GitHub Actions Self-hosted Runner
+## 12. Jenkins CI/CD Pipeline
+
+Jenkins provides an additional CI/CD implementation for automating application delivery to Amazon EKS.
+
+### Jenkins Environment
+
+| Configuration | Details |
+|---|---|
+| Operating System | RHEL 10 |
+| Jenkins Version | 2.580.2 |
+| Java Runtime | Amazon Corretto OpenJDK 21 |
+| AWS CLI | AWS CLI v2 |
+| Kubernetes CLI | kubectl |
+| Container Runtime | Docker |
+| Pipeline Definition | Jenkinsfile |
+| AWS Region | ap-southeast-1 |
+| EKS Cluster | enterprise-ai-eks |
+| ECR Repository | enterprise-ai-platform |
+
+### Jenkins Pipeline Stages
+
+| Stage | Description |
+|---|---|
+| Checkout | Retrieves source code from GitHub |
+| Install Dependencies and Test | Installs Python dependencies and runs pytest |
+| Build Docker Image | Builds versioned and latest Docker images |
+| Push Image to Amazon ECR | Authenticates and pushes images to ECR |
+| Verify EKS Access | Verifies AWS identity and Kubernetes permissions |
+| Deploy to Amazon EKS | Applies Kubernetes deployment and service manifests |
+| Deployment Rollout | Waits for Kubernetes deployment readiness |
+
+### Jenkins AWS Authentication
+
+Jenkins uses a dedicated AWS IAM user for pipeline authentication.
+
+The AWS credentials are stored in Jenkins Credentials and accessed through the credential ID:
+
+```text
+aws-jenkins-ecr
+```
+
+The Jenkins IAM user has permissions for ECR image publishing and the required EKS access.
+
+An EKS access entry and the AmazonEKSEditPolicy association provide Kubernetes access within the `default` namespace.
+
+AWS credentials are not stored directly in the Jenkinsfile.
+
+### Jenkins Deployment Process
+
+The pipeline performs the following operations:
+
+1. Retrieves the latest source code.
+2. Runs automated Python tests.
+3. Builds the Docker image.
+4. Authenticates with Amazon ECR.
+5. Pushes the versioned image to ECR.
+6. Configures Kubernetes access using `aws eks update-kubeconfig`.
+7. Applies the Kubernetes deployment manifest.
+8. Applies the Kubernetes service manifest.
+9. Deploys the image corresponding to the Jenkins build number.
+10. Waits for the Kubernetes rollout to complete.
+11. Verifies deployments, pods, services, and deployed image.
+
+### Jenkins Pipeline Configuration
+
+The pipeline is defined in:
+
+```text
+Jenkinsfile
+```
+
+The image tag is generated dynamically using:
+
+```groovy
+ECR_IMAGE="$IMAGE_URI:$BUILD_NUMBER"
+```
+
+The deployment uses:
+
+```bash
+kubectl rollout status deployment/ai-platform \
+  -n default \
+  --timeout=300s
+```
+
+---
+
+## 13. GitHub Actions Self-hosted Runner
 
 A self-hosted GitHub Actions runner is configured on the RHEL 10 environment.
-
-### Runner Configuration
 
 | Configuration | Value |
 |---|---|
@@ -443,32 +596,34 @@ A self-hosted GitHub Actions runner is configured on the RHEL 10 environment.
 | Architecture | Linux x64 |
 | Runner Name | localhost |
 | Runner Labels | self-hosted, Linux, X64 |
-| Installation Directory | /opt/actions-runner |
+| Installation Directory | `/opt/actions-runner` |
 | Execution Mode | systemd service |
 
-The runner is responsible for executing the deployment job that connects to Amazon EKS.
+The runner executes GitHub Actions jobs using the local RHEL environment.
 
-The runner uses a systemd service and has been configured with the appropriate SELinux file context to allow execution on RHEL.
+It is configured as a systemd service with the required SELinux permissions.
 
 ---
 
-## 12. AWS Security Implementation
+## 14. Security Implementation
 
-The project uses several security mechanisms:
+The project implements several AWS and container security practices:
 
-- IAM roles and policies for AWS resource access.
-- GitHub Actions OIDC authentication.
-- Restricted IAM permissions for CI/CD operations.
-- EKS access entries for the GitHub Actions IAM role.
-- ECR authentication using AWS authorization tokens.
+- AWS IAM roles and policies for access control.
+- GitHub Actions authentication through OIDC.
+- Dedicated IAM credentials for Jenkins.
+- Jenkins credentials management instead of hardcoding AWS access keys.
+- EKS access entries for CI/CD authentication.
+- Restricted Kubernetes namespace access for Jenkins.
+- Amazon ECR authentication using AWS authorization tokens.
 - Non-root Docker container execution.
-- Restricted EKS API endpoint access using an authorized public IP CIDR.
+- Restricted EKS API endpoint access.
 
-**Security note:** Never commit AWS credentials, GitHub runner registration tokens, private keys, or other sensitive information to the repository.
+**Security reminder:** Never commit AWS access keys, secret keys, GitHub runner registration tokens, private keys, or other sensitive credentials to GitHub.
 
 ---
 
-## 13. Testing and Verification
+## 15. Testing and Verification
 
 The project includes automated API tests using pytest.
 
@@ -504,16 +659,25 @@ kubectl rollout status deployment/ai-platform
 curl http://localhost:8000/health
 ```
 
-The GitHub Actions workflow successfully completed both jobs:
+### CI/CD Verification
 
-1. Test, Build and Push to ECR.
-2. Deploy to Amazon EKS.
+The Jenkins pipeline completed successfully in Build #8.
 
-The deployment job also completed Kubernetes rollout and application health verification.
+Verified pipeline activities include:
+
+- GitHub source checkout.
+- Python dependency installation and automated tests.
+- Docker image build.
+- Amazon ECR authentication and image publishing.
+- Jenkins AWS identity verification.
+- Amazon EKS connection.
+- Kubernetes access verification.
+- Kubernetes deployment and service application.
+- Deployment rollout verification.
 
 ---
 
-## 14. Important Troubleshooting Notes
+## 16. Troubleshooting
 
 | Issue | Possible Solution |
 |---|---|
@@ -521,16 +685,20 @@ The deployment job also completed Kubernetes rollout and application health veri
 | Docker image not found | Verify the image tag using `docker images` |
 | Kubernetes authentication failure | Run `aws eks update-kubeconfig` |
 | Pod ImagePullBackOff | Check the ECR image URI and node IAM permissions |
+| Jenkins pipeline compilation failure | Check Jenkinsfile Declarative Pipeline braces and stage structure |
+| Jenkins AWS authentication failure | Verify Jenkins credentials and IAM permissions |
+| Jenkins EKS access denied | Check EKS access entry and associated access policy |
+| Jenkins rollout timeout | Inspect pod status, events, and application logs |
 | GitHub runner unavailable | Check runner status and workflow labels |
 | Runner SELinux permission error | Check SELinux contexts and service logs |
-| EKS endpoint timeout | Check the authorized public IP CIDR and network connectivity |
+| EKS endpoint timeout | Check network connectivity and authorized IP CIDR |
 | Terraform validation failure | Run `terraform validate` and review configuration errors |
 
 ---
 
-## 15. Future Improvements
+## 17. Future Improvements
 
-The following improvements are planned:
+Planned improvements include:
 
 - Prometheus and Grafana monitoring.
 - Centralized application and infrastructure logging.
@@ -540,61 +708,82 @@ The following improvements are planned:
 - Terraform remote state management.
 - Infrastructure security scanning.
 - Docker image vulnerability scanning.
-- Deployment rollback automation.
+- Automated deployment rollback.
 - Integration of a real machine learning prediction model.
 - MLOps model training and deployment automation.
+- Enhanced Jenkins pipeline notifications.
+- Continuous deployment approval gates.
 
 ---
 
-## 16. Cost Management and Infrastructure Cleanup
+## 18. Cost Management and Infrastructure Cleanup
 
-AWS resources such as EKS clusters, EC2 instances, networking resources, and storage may generate charges while active.
+AWS services such as EKS, EC2 worker nodes, networking resources, and storage may generate charges while active.
 
-Before finishing the project, review the resources and costs in the AWS Console.
+Review AWS billing and resource usage regularly.
 
-To remove Terraform-managed infrastructure when it is no longer needed:
+When the infrastructure is no longer required, review the Terraform destroy plan:
 
 ```bash
 cd terraform-aws
 
 terraform plan -destroy
+```
 
+Only after reviewing the plan and confirming that the resources can be removed:
+
+```bash
 terraform destroy
 ```
 
-**Important:** Review the destruction plan carefully. This removes Terraform-managed resources and can make the application unavailable. Ensure that no resources you want to keep depend on this infrastructure.
+**Important:** Destroying infrastructure can make the application unavailable. Review all resources and dependencies before approving the operation.
 
 ---
 
-## 17. Skills Demonstrated
+## 19. Skills Demonstrated
 
-Through this project, the following practical DevOps skills were implemented:
+This project demonstrates practical skills in:
 
-- Linux administration using RHEL.
+- Linux system administration using RHEL.
+- Python application testing.
 - Docker image creation and container management.
 - Terraform infrastructure provisioning.
-- AWS IAM and security configuration.
+- AWS IAM and cloud security.
 - Amazon VPC and networking.
 - Amazon ECR image management.
 - Amazon EKS and Kubernetes deployment.
-- GitHub Actions CI/CD automation.
-- OIDC-based cloud authentication.
+- Jenkins CI/CD pipeline development.
+- GitHub Actions automation.
+- AWS OIDC authentication.
+- Jenkins credential management.
 - Self-hosted runner configuration.
-- Application testing and deployment verification.
+- Kubernetes rollout verification.
 - Infrastructure troubleshooting.
+- Automated application delivery.
 
 ---
 
-## 18. Project Repository
+## 20. Project Information
 
-**GitHub:** https://github.com/OshanWanasekara/enterprise-ai-platform-aws
+**Project:** Enterprise AI Platform – AWS DevOps Project
 
-**Cloud Provider:** Amazon Web Services (AWS)
+**GitHub Repository:**  
+https://github.com/OshanWanasekara/enterprise-ai-platform-aws
 
-**Region:** Asia Pacific (Singapore) – ap-southeast-1
+**Cloud Provider:** Amazon Web Services
 
-**Status:** AWS CI/CD pipeline and Kubernetes deployment successfully verified.
+**AWS Region:** Asia Pacific (Singapore) – `ap-southeast-1`
+
+**Kubernetes Cluster:** `enterprise-ai-eks`
+
+**Container Registry:** Amazon ECR
+
+**CI/CD Tools:** Jenkins and GitHub Actions
+
+**Infrastructure as Code:** Terraform
+
+**Project Status:** Jenkins CI/CD pipeline and Amazon EKS deployment successfully completed and verified through Build #8.
 
 ---
 
-*This project was developed as a practical DevOps learning and implementation project to demonstrate automated application delivery and cloud infrastructure management using AWS.*
+*This project was developed as a practical DevOps implementation to demonstrate automated application delivery, infrastructure management, containerization, and Kubernetes orchestration using AWS.*
